@@ -11,15 +11,15 @@ import bencodepy
 
 def decode_part(value, start_index):
     if chr(value[start_index]).isdigit():
-        # first_colon_index = value.find(b":")
-        # if first_colon_index == -1:
-        #     raise ValueError("Invalid encoded value")
+        first_colon_index = value.find(b":")
+        if first_colon_index == -1:
+            raise ValueError("Invalid encoded value")
         return decode_string(value,start_index)
-    elif chr(value[0]) == "i":
+    elif chr(value[start_index]) == "i":
         return decode_integer(value,start_index)
-    elif chr(value[0]) == "l":
+    elif chr(value[start_index]) == "l":
         return decode_list(value,start_index)
-    elif chr(value[0]) == "d":
+    elif chr(value[start_index]) == "d":
         return decode_dict(value,start_index)
     else:
         raise NotImplementedError("Only strings are supported at the moment")
