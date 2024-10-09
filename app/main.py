@@ -9,7 +9,7 @@ import bencodepy
 # - decode_bencode(b"5:hello") -> b"hello"
 # - decode_bencode(b"10:hello12345") -> b"hello12345"
 def decode_part(value, start_index):
-    if chr(value[value]).isdigit():
+    if chr(value[start_index]).isdigit():
         first_colon_index = value.find(b":")
         if first_colon_index == -1:
             raise ValueError("Invalid encoded value")
