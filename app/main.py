@@ -38,7 +38,6 @@ def decode_string(bencoded_value, start_index):
     word_end = first_colon_index + length + 1
     return bencoded_value[word_start:word_end], start_index + word_end
 
-
 def decode_integer(bencoded_value, start_index):
     if chr(bencoded_value[start_index]) != "i":
         raise ValueError("Invalid encoded integer", bencoded_value, start_index)
@@ -47,7 +46,6 @@ def decode_integer(bencoded_value, start_index):
     if end_marker == -1:
         raise ValueError("Invalid encoded integer", bencoded_value)
     return int(bencoded_value[1:end_marker]), start_index + end_marker + 1
-
 def decode_list(bencoded_value, start_index):
     if chr(bencoded_value[start_index]) != "l":
         raise ValueError("Invalid encoded list", bencoded_value, start_index)
@@ -57,7 +55,6 @@ def decode_list(bencoded_value, start_index):
         value, current_index = decode_part(bencoded_value, current_index)
         values.append(value)
     return values, current_index + 1
-
 def decode_dict(bencoded_value, start_index):
     if chr(bencoded_value[start_index]) != "d":
         raise ValueError("Invalid encoded dict", bencoded_value, start_index)
@@ -68,6 +65,38 @@ def decode_dict(bencoded_value, start_index):
         value, current_index = decode_part(bencoded_value, current_index)
         values[key.decode()] = value
     return values, current_index
+
+
+
+# def decode_integer(bencoded_value, start_index):
+#     if chr(bencoded_value[start_index]) != "i":
+#         raise ValueError("Invalid encoded integer", bencoded_value, start_index)
+#     bencoded_value = bencoded_value[start_index:]
+#     end_marker = bencoded_value.find(b"e")
+#     if end_marker == -1:
+#         raise ValueError("Invalid encoded integer", bencoded_value)
+#     return int(bencoded_value[1:end_marker]), start_index + end_marker + 1
+#
+# def decode_list(bencoded_value, start_index):
+#     if chr(bencoded_value[start_index]) != "l":
+#         raise ValueError("Invalid encoded list", bencoded_value, start_index)
+#     current_index = start_index + 1
+#     values = []
+#     while chr(bencoded_value[current_index]) != "e":
+#         value, current_index = decode_part(bencoded_value, current_index)
+#         values.append(value)
+#     return values, current_index + 1
+#
+# def decode_dict(bencoded_value, start_index):
+#     if chr(bencoded_value[start_index]) != "d":
+#         raise ValueError("Invalid encoded dict", bencoded_value, start_index)
+#     current_index = start_index + 1
+#     values = {}
+#     while chr(bencoded_value[current_index]) != "e":
+#         key, current_index = decode_string(bencoded_value, current_index)
+#         value, current_index = decode_part(bencoded_value, current_index)
+#         values[key.decode()] = value
+#     return values, current_index
 
 def decode_bencode(bencoded_value):
     return decode_part(bencoded_value, 0)[0]
