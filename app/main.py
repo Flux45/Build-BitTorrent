@@ -39,7 +39,7 @@ def decode_part(value, start_index):
 
 def decode_string(bencoded_value, start_index):
     if not chr(bencoded_value[start_index]).isdigit():
-        raise ValueError("Invalid encoded value", bencoded_value, start_index)
+        raise ValueError("Invalid encoded string", bencoded_value, start_index)
     bencoded_value = bencoded_value[start_index:]
     first_colon_index = bencoded_value.find(b":")
     if first_colon_index == -1:
