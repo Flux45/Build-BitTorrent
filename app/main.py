@@ -9,6 +9,23 @@ import bencodepy
 # - decode_bencode(b"5:hello") -> b"hello"
 # - decode_bencode(b"10:hello12345") -> b"hello12345"
 
+import hashlib
+import json
+
+def hash_dict(d):
+    def ensure_serializable(value):
+        if isinstance(value, bytes):
+            return value.decode('latin1')  # or use another encoding
+        if isinstance(value, dict):
+            return {k: ensure_serializable(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [ensure_serializable(v) for v in value]
+        return value
+
+    serializable_dict = ensure_serializable(d)
+    json_str = json.dumps(serializable_dict, sort_keys=True)
+    return hashlib.sha1(json_str.encode('utf-8')).hexdigest()
+
 def decode_part(value, start_index):
     if chr(value[start_index]).isdigit():
         first_colon_index = value.find(b":")
@@ -100,6 +117,8 @@ def main():
         torrent = decode_bencode(bencoded_content)
         print("Tracker URL:", torrent["announce"].decode())
         print("Length:", torrent["info"]["length"])
+        print("Info Hash:", hash_dict(torrent["info"]))
+
     else:
         raise NotImplementedError(f"Unknown command {command}")
 
