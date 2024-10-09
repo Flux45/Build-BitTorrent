@@ -9,34 +9,20 @@ import bencodepy
 # - decode_bencode(b"5:hello") -> b"hello"
 # - decode_bencode(b"10:hello12345") -> b"hello12345"
 
-# def decode_part(value, start_index):
-#     if chr(value[start_index]).isdigit():
-#         # first_colon_index = value.find(b":")
-#         # if first_colon_index == -1:
-#         #     raise ValueError("Invalid encoded value")
-#         return decode_string(value,start_index)
-#     elif chr(value[0]) == "i":
-#         return decode_integer(value,start_index)
-#     elif chr(value[0]) == "l":
-#         return decode_list(value,start_index)
-#     elif chr(value[0]) == "d":
-#         return decode_dict(value,start_index)
-#     else:
-#         raise NotImplementedError("Only strings are supported at the moment")
-
 def decode_part(value, start_index):
     if chr(value[start_index]).isdigit():
-        return decode_string(value, start_index)
-    elif chr(value[start_index]) == "i":
-        return decode_integer(value, start_index)
-    elif chr(value[start_index]) == "l":
-        return decode_list(value, start_index)
-    elif chr(value[start_index]) == "d":
-        return decode_dict(value, start_index)
+        # first_colon_index = value.find(b":")
+        # if first_colon_index == -1:
+        #     raise ValueError("Invalid encoded value")
+        return decode_string(value,start_index)
+    elif chr(value[0]) == "i":
+        return decode_integer(value,start_index)
+    elif chr(value[0]) == "l":
+        return decode_list(value,start_index)
+    elif chr(value[0]) == "d":
+        return decode_dict(value,start_index)
     else:
-        raise NotImplementedError(
-            "Only strings and integers are supported at the moment"
-        )
+        raise NotImplementedError("Only strings are supported at the moment")
 
 
 
