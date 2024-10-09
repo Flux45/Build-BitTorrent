@@ -121,7 +121,8 @@ def main():
         bencoded_info_file = bencodepy.encode(info_file)
         sha1_hash = hashlib.sha1(bencoded_info_file).hexdigest()
         print("Info Hash:", sha1_hash)
-
+        print("Piece Length:", torrent["info"]["piece length"])
+        print("Piece Hashes:", torrent["info"]["pieces"].hex())
     else:
         raise NotImplementedError(f"Unknown command {command}")
 
