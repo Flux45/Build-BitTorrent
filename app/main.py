@@ -190,7 +190,7 @@ def main():
         torrent = decode_bencode(bencoded_content)
         url = torrent["announce"].decode()
         query_params = dict(
-            info_hash=hashlib.sha1(bencode(torrent["info"])).hexdigest(),
+            info_hash=hashlib.sha1(bencode(torrent["info"])).digest(),
             peer_id="00112233445566778899",
             port=6881,
             uploaded=0,
