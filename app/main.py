@@ -1,4 +1,3 @@
-import binascii
 import json
 import sys
 from logging import ERROR
@@ -103,9 +102,9 @@ def bencode_bytes(value):
 def bencode_list(values):
     result = b"l"
     for value in values:
-        result = result + bencode(value)
-        result = result + b"e"
-
+        result += bencode(value)
+    result += b"e"
+    return result
 def bencode_dict(value):
     result = b"d"
     for key, value in value.items():
@@ -157,18 +156,32 @@ def main():
 
         # Uncomment this block to pass the first stage
         print(json.dumps(decode_bencode(bencoded_value), default=bytes_to_str))
-        elif command == "info":
+    elif command == "info":
         file_name = sys.argv[2]
         with open(file_name, "rb") as torrent_file:
             bencoded_content = torrent_file.read()
         torrent = decode_bencode(bencoded_content)
+
         print("Tracker URL:", torrent["announce"].decode())
         print("Length:", torrent["info"]["length"])
-        print("Info Hash:", hashlib.sha1(bencode(torrent["info"])).hexdigest())
+        info_file = torrent["info"]
+        bencoded_info_file = bencodepy.encode(info_file)
+        sha1_hash = hashlib.sha1(bencoded_info_file).hexdigest()
+        print("Info Hash:", sha1_hash)
         print("Piece Length:", torrent["info"]["piece length"])
-        pieces = torrent["info"]["pieces"]
-        for i in range(len(pieces) // 20):
-            print(binascii.hexlify(pieces[i * 20: i * 20 + 20]).decode())
+        print("Piece Hashes:", torrent["info"]["pieces"].hex())
+        print(info_file.keys())
+        url = torrent["announce"].decode()
+        query_params = dict(
+            info_hash = sha1_hash,
+            peer_id = "00112233445566778899",
+            port = 6881,
+            uploaded = 0,
+            downloaded = 0,
+            left = torrent["info"]["length"],
+            compact = 1,
+        )
+        print(httpget(url, query_params))
 
     elif command == "peers":
         file_name = sys.argv[2]
