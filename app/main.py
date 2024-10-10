@@ -170,7 +170,7 @@ def main():
         print("Info Hash:", sha1_hash)
         print("Piece Length:", torrent["info"]["piece length"])
         print("Piece Hashes:", torrent["info"]["pieces"].hex())
-        print(info_file.keys())
+        # print(info_file.keys())
         url = torrent["announce"].decode()
         query_params = dict(
             info_hash = sha1_hash,
@@ -181,7 +181,8 @@ def main():
             left = torrent["info"]["length"],
             compact = 1,
         )
-        print(httpget(url, query_params))
+        # response = decode_bencode(requests.get(url, params=query_params).content)
+        # print(response)
 
     elif command == "peers":
         file_name = sys.argv[2]
