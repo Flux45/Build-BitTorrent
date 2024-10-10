@@ -1,5 +1,8 @@
 import json
 import sys
+from logging import ERROR
+from sys import byteorder
+
 import bencodepy
 # import bencodepy - available if you need it!
 # import requests - available if you need it!
@@ -8,7 +11,7 @@ import bencodepy
 #
 # - decode_bencode(b"5:hello") -> b"hello"
 # - decode_bencode(b"10:hello12345") -> b"hello12345"
-
+import requests
 import hashlib
 import json
 
@@ -89,6 +92,49 @@ def decode_dict(bencoded_value, start_index):
 def decode_bencode(bencoded_value):
     return decode_part(bencoded_value, 0)[0]
 
+def bencode_integer(value):
+    return f"i{value}e".encode()
+def bencode_string(value):
+    return f"{len(value)}:{value}".encode()
+def bencode_bytes(value):
+    length = len(value)
+    return str(length).encode() + b":" + value
+def bencode_list(values):
+    result = b"l"
+    for value in values:
+        result = result + bencode(value)
+        result = result + b"e"
+
+def bencode_dict(value):
+    result = b"d"
+    for key, value in value.items():
+        result += bencode_string(key)
+        result += bencode(value)
+    result += b"e"
+    return result
+
+def bencode(value):
+    if isinstance(value, int):
+        return bencode_integer(value)
+    elif isinstance(value, str):
+        return bencode_string(value)
+    elif isinstance(value, bytes):
+        return bencode_bytes(value)
+    elif isinstance(value, list):
+        return bencode_list(value)
+    elif isinstance(value, dict):
+        return bencode_dict(value)
+    else:
+        raise ValueError("Unsupported type", value)
+
+def httpget(url, params):
+    response_content = requests.get(url,  params=params).content
+    response = decode_bencode(response_content)
+    return {json.dumps(response, indent=2)}
+    # if response.status_code == 200:
+    #     return response.json()
+    # else:
+    #     "failed to get url"
 def main():
     command = sys.argv[1]
 
@@ -115,6 +161,7 @@ def main():
         with open(file_name, "rb") as torrent_file:
             bencoded_content = torrent_file.read()
         torrent = decode_bencode(bencoded_content)
+
         print("Tracker URL:", torrent["announce"].decode())
         print("Length:", torrent["info"]["length"])
         info_file = torrent["info"]
@@ -123,6 +170,41 @@ def main():
         print("Info Hash:", sha1_hash)
         print("Piece Length:", torrent["info"]["piece length"])
         print("Piece Hashes:", torrent["info"]["pieces"].hex())
+        print(info_file.keys())
+        url = torrent["announce"].decode()
+        query_params = dict(
+            info_hash = sha1_hash,
+            peer_id = "00112233445566778899",
+            port = 6881,
+            uploaded = 0,
+            downloaded = 0,
+            left = torrent["info"]["length"],
+            compact = 1,
+        )
+        print(httpget(url, query_params))
+
+    elif command == "peers":
+        file_name = sys.argv[2]
+        with open(file_name, "rb") as torrent_file:
+            bencoded_content = torrent_file.read()
+        torrent = decode_bencode(bencoded_content)
+        url = torrent["announce"].decode()
+        query_params = dict(
+            info_hash=hashlib.sha1(bencode(torrent["info"])).hexdigest(),
+            peer_id="00112233445566778899",
+            port=6881,
+            uploaded=0,
+            downloaded=0,
+            left=torrent["info"]["length"],
+            compact=1,
+        )
+        response = decode_bencode(requests.get(url, params=query_params).content)
+        peers = response["peers"]
+        for i in range(0, len(peers), 6):
+            peer = peers[i: i + 6]
+            ip_address = f"{peer[0]}.{peer[1]}.{peer[2]}.{peer[3]}"
+            port = int.from_bytes(peer[4:], byteorder="big", signed=False)
+            print(f"{ip_address}:{port}")
     else:
         raise NotImplementedError(f"Unknown command {command}")
 
