@@ -1,3 +1,4 @@
+import binascii
 import json
 import sys
 from logging import ERROR
@@ -156,74 +157,41 @@ def main():
 
         # Uncomment this block to pass the first stage
         print(json.dumps(decode_bencode(bencoded_value), default=bytes_to_str))
-    elif command == "info":
+        elif command == "info":
         file_name = sys.argv[2]
         with open(file_name, "rb") as torrent_file:
             bencoded_content = torrent_file.read()
         torrent = decode_bencode(bencoded_content)
-
         print("Tracker URL:", torrent["announce"].decode())
         print("Length:", torrent["info"]["length"])
-        info_file = torrent["info"]
-        bencoded_info_file = bencodepy.encode(info_file)
-        sha1_hash = hashlib.sha1(bencoded_info_file).hexdigest()
-        print("Info Hash:", sha1_hash)
+        print("Info Hash:", hashlib.sha1(bencode(torrent["info"])).hexdigest())
         print("Piece Length:", torrent["info"]["piece length"])
-        print("Piece Hashes:", torrent["info"]["pieces"].hex())
-        print(info_file.keys())
+        pieces = torrent["info"]["pieces"]
+        for i in range(len(pieces) // 20):
+            print(binascii.hexlify(pieces[i * 20: i * 20 + 20]).decode())
+
+    elif command == "peers":
+        file_name = sys.argv[2]
+        with open(file_name, "rb") as torrent_file:
+            bencoded_content = torrent_file.read()
+        torrent = decode_bencode(bencoded_content)
         url = torrent["announce"].decode()
         query_params = dict(
-            info_hash = sha1_hash,
-            peer_id = "00112233445566778899",
-            port = 6881,
-            uploaded = 0,
-            downloaded = 0,
-            left = torrent["info"]["length"],
-            compact = 1,
+            info_hash=hashlib.sha1(bencode(torrent["info"])).digest(),
+            peer_id="00112233445566778899",
+            port=6881,
+            uploaded=0,
+            downloaded=0,
+            left=torrent["info"]["length"],
+            compact=1,
         )
-        print(httpget(url, query_params))
-
-elif command == "peers":
-
-file_name = sys.argv[2]
-
-with open(file_name, "rb") as torrent_file:
-    bencoded_content = torrent_file.read()
-
-torrent = decode_bencode(bencoded_content)
-
-url = torrent["announce"].decode()
-
-query_params = dict(
-
-    info_hash=hashlib.sha1(bencode(torrent["info"])).digest(),
-
-    peer_id="00112233445566778899",
-
-    port=6881,
-
-    uploaded=0,
-
-    downloaded=0,
-
-    left=torrent["info"]["length"],
-
-    compact=1,
-
-)
-
-response = decode_bencode(requests.get(url, query_params).content)
-
-peers = response["peers"]
-
-for i in range(0, len(peers), 6):
-    peer = peers[i: i + 6]
-
-    ip_address = f"{peer[0]}.{peer[1]}.{peer[2]}.{peer[3]}"
-
-    port = int.from_bytes(peer[4:], byteorder="big", signed=False)
-
-    print(f"{ip_address}:{port}")
+        response = decode_bencode(requests.get(url, params=query_params).content)
+        peers = response["peers"]
+        for i in range(0, len(peers), 6):
+            peer = peers[i: i + 6]
+            ip_address = f"{peer[0]}.{peer[1]}.{peer[2]}.{peer[3]}"
+            port = int.from_bytes(peer[4:], byteorder="big", signed=False)
+            print(f"{ip_address}:{port}")
     else:
         raise NotImplementedError(f"Unknown command {command}")
 
