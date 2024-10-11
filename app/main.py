@@ -4,6 +4,7 @@ from logging import ERROR
 from sys import byteorder
 
 import bencodepy
+import socket
 # import bencodepy - available if you need it!
 # import requests - available if you need it!
 
@@ -181,8 +182,6 @@ def main():
             left = torrent["info"]["length"],
             compact = 1,
         )
-        # response = decode_bencode(requests.get(url, params=query_params).content)
-        # print(response)
 
     elif command == "peers":
         file_name = sys.argv[2]
@@ -206,6 +205,27 @@ def main():
             ip_address = f"{peer[0]}.{peer[1]}.{peer[2]}.{peer[3]}"
             port = int.from_bytes(peer[4:], byteorder="big", signed=False)
             print(f"{ip_address}:{port}")
+    elif command == "handshake":
+        file_name = sys.argv[2]
+        (ip, port) = sys.argv[3].split(":")
+        with open(file_name, "rb") as torrent_file:
+            bencoded_content = torrent_file.read()
+        torrent = decode_bencode(bencoded_content)
+        info_file = torrent["info"]
+        bencoded_info = bencodepy.encode(info_file)
+        info_hash = hashlib.sha1(bencoded_info).digest()
+
+        handshake = (
+                b"\x13BitTorrent protocol\x00\x00\x00\x00\x00\x00\x00\x00"
+                + info_hash
+                + b"00112233445566778899"
+        )
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.connect((ip, int(port)))
+            sock.send(handshake)
+            response = sock.recv(2048)
+            print(f"Peer ID: {response.decode()}")
     else:
         raise NotImplementedError(f"Unknown command {command}")
 
