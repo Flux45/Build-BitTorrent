@@ -225,7 +225,7 @@ def main():
             sock.connect((ip, int(port)))
             sock.send(handshake)
             response = sock.recv(2048)
-            print(f"Peer ID: {response.decode()}")
+            print(f"Peer ID: {response}")
     else:
         raise NotImplementedError(f"Unknown command {command}")
 
