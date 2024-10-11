@@ -218,14 +218,14 @@ def main():
         handshake = (
                 b"\x13BitTorrent protocol\x00\x00\x00\x00\x00\x00\x00\x00"
                 + info_hash
-                + b"00112233445566778899".hex()
+                + b"00112233445566778899"
         )
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect((ip, int(port)))
             sock.send(handshake)
             response = sock.recv(2048)
-            print(f"Peer ID: {response}")
+            print(f"Peer ID: {response.hex()}")
     else:
         raise NotImplementedError(f"Unknown command {command}")
 
