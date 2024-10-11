@@ -218,7 +218,7 @@ def main():
         handshake = (
                 b"\x13BitTorrent protocol\x00\x00\x00\x00\x00\x00\x00\x00"
                 + info_hash
-                + b"00112233445566778899"
+                + b"00112233445566778899".hex()
         )
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
